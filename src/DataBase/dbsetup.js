@@ -1,25 +1,21 @@
-import {db} from '../Authentication/config'
+import { db } from '../Authentication/config';
 import { doc, setDoc } from 'firebase/firestore';
 
-export const createUserProfile=async(user , username)=>{
-    try {
-   const reference= doc(db,'users',user.uid)
+export const createUserProfile = async (uid, username, phonenumber) => {
+  try {
+    const reference = doc(db, 'users', uid);
 
-    await setDoc(reference,{
-        uid:user.uid,
-        username:username,
-        phonenumber:user.phonenumber,
-        createdAt:new Date()
+    await setDoc(reference, {
+      uid,
+      username,
+      phonenumber,
+      createdAt: new Date(),
+    });
 
-
-
-
-    })
-    console.log("Profile Created Successfully")
-
-        
-    } catch (error) {
-        alert("Error creating Profile",error.message)
-        
-    }
-}
+    console.log('✅ Profile created successfully for UID:', uid);
+    return true;
+  } catch (error) {
+    console.error('❌ Firestore Error:', error.message);
+    return false;
+  }
+};

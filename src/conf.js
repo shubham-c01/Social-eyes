@@ -1,3 +1,5 @@
-import {Button} from './Components/Button'
+import { createUserProfile } from './DataBase/dbsetup'
+import {db,auth} from './Authentication/config'
 
-export {Button}
+
+export {createUserProfile,db,auth}

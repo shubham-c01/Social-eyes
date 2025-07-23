@@ -1,10 +1,35 @@
-import { StrictMode } from 'react'
+import { Children, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import {  RouterProvider } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
+import Landingpage from './Pages/Landingpage.jsx'
+import Entry from './Pages/Entry.jsx'
+import Mainpage from './Pages/Mainpage.jsx'
+const router=createBrowserRouter([
+  {
+    path: '/',
+    element: <Landingpage />    
+  },
+  {
+    children:[
+      {
+        path: '/entry',
+        element: <Entry />
+      },
+      {
+        path: '/mainpage',
+        element: <Mainpage />
+      }
+    ]
+  }
+  
+
+  
+])
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <RouterProvider router={router} />
+  </StrictMode>
 )

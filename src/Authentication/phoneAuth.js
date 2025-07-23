@@ -1,7 +1,7 @@
 import { getAuth, RecaptchaVerifier,signInWithPhoneNumber } from "firebase/auth";
 
 const auth = getAuth();
-export const setupRecaptcha=(phonenumber,setotpsent,setconfirmationresult)=>{
+const setupRecaptcha=(phonenumber,setotpsent,setconfirmationresult)=>{
     window.recaptchaVerifier = new RecaptchaVerifier( 'sign-in-button', {
   'size': 'invisible',
   'callback': (response) => {
