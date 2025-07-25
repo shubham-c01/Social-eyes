@@ -1,138 +1,160 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import PhoneInput from 'react-phone-input-2';
+import { useForm } from 'react-hook-form';
 import 'react-phone-input-2/lib/style.css';
-import { createUserProfile } from '../conf'; // Removed auth
+import { Eye, EyeClosed } from 'lucide-react';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserProfile } from '../conf';
 
 function Entry() {
+  const [loader, setLoader] = useState(false);
+  const [modalLoader, setModalLoader] = useState(false);
+  const [showpassword, setShowPassword] = useState(false);
+  const [modal, setmodal] = useState(false);
+  const [uid, setUid] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [username, setUsername] = useState("");
   const navigate = useNavigate();
-  const [phoneFocused, setPhoneFocused] = useState(false);
-  const [showotpbox, setShowOtpBox] = useState(false);
 
   const {
     register,
     handleSubmit,
-    control,
-    reset,
     formState: { errors },
   } = useForm();
 
   const onSubmit = async (data) => {
-    console.log('Form Data:', data);
-    
+    setLoader(true);
     try {
-      // 🔥 Fake UID for dev testing
-      const fakeUID = 'dev-test-001';
+      const auth = getAuth();
+      const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = credential.user;
 
-      const createdProfile = await createUserProfile(fakeUID, data.username, data.phonenumber);
-      if (createdProfile) {
-        setShowOtpBox(true);
-        console.log('Data saved to Firestore successfully');
-      } else {
-        alert('User profile creation failed');
+      if (user) {
+        setUid(user.uid);
+        setEmail(data.email);
+        setmodal(true);
+        alert("✔ User registered successfully!");
       }
     } catch (error) {
-      console.error('Error in creating user profile:', error);
-      alert('Error saving data to Firestore');
+      alert("❌ Error occurred while creating account: " + error.message);
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  const registeruser = async () => {
+    if (!uid || !username || !email) {
+      alert("❌ Missing info to save profile.");
+      return;
+    }
+
+    setModalLoader(true);
+    const saved = await createUserProfile(uid, email, username);
+    setModalLoader(false);
+
+    if (saved) {
+      alert("✅ Profile saved successfully!");
+      navigate("/login");
+    } else {
+      alert("❌ Failed to save profile.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F3FF] via-purple-100 to-purple-300 font-sans flex justify-center items-center px-4">
-      <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center">
-        <img
-          src="/AppLogo.png"
-          alt="App Logo"
-          className="mx-auto w-[120px] h-auto"
-        />
+    <div className="min-h-screen relative bg-gradient-to-br from-[#F5F3FF] via-purple-100 to-purple-300 font-sans flex justify-center items-center px-4">
 
+      {/* Main loader */}
+      {loader && (
+        <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center rounded-xl shadow-lg">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-purple-400 border-t-transparent animate-spin" />
+            <div className="absolute inset-3 rounded-full bg-white shadow-inner" />
+          </div>
+          <h2 className="text-[#1E1B4B] mt-5 text-lg font-bold">Getting Things Ready...</h2>
+          <p className="text-sm text-[#4B5563]">Please wait while we set you up</p>
+        </div>
+      )}
+
+      {/* Username Modal */}
+      {modal && (
+        <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white/80 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+            <h2 className="text-[#1E1B4B] text-xl font-bold mb-4 text-center">
+              Enter Your Social-Eyes Username
+            </h2>
+
+            <form className="flex flex-col space-y-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-3 bg-white/90 rounded-md border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="username"
+              />
+
+              <button
+                type="button"
+                className="w-full py-3 bg-[#1E1B4B] text-white rounded-full hover:bg-[#2C2A6B] transition-all duration-300 font-semibold"
+                onClick={registeruser}
+                disabled={modalLoader}
+              >
+                {modalLoader ? 'Saving...' : 'Done'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Main Form */}
+      <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center relative z-10">
+        <img src="/AppLogo.png" alt="App Logo" className="mx-auto w-[120px]" />
         <p className="text-[#1E1B4B] text-lg mt-4">
           It's Superfun & Supereasy using <strong>Social-Eyes</strong>
         </p>
+        <h3 className="text-[#1E1B4B] text-2xl font-bold mt-6">Register Yourself</h3>
 
-        <h3 className="text-[#1E1B4B] text-2xl font-bold mt-6">
-          Register Yourself
-        </h3>
-
-        <form
-          className="flex flex-col space-y-5 mt-6"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          {/* Username Field */}
+        <form className="flex flex-col space-y-5 mt-6" onSubmit={handleSubmit(onSubmit)}>
+          {/* Email */}
           <div className="text-left">
-            <label className="block text-sm text-[#1E1B4B] font-medium mb-1">
-              Username
-            </label>
+            <label className="block text-sm text-[#1E1B4B] font-medium mb-1">Email</label>
             <input
-              type="text"
-              placeholder="Enter your username"
+              type="email"
+              placeholder="Enter your email"
               className="w-full p-3 bg-white/80 rounded-md border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              {...register('username', { required: true })}
+              {...register('email', { required: 'Email is required' })}
             />
-            {errors.username && (
-              <p className="text-red-500 text-sm mt-1">Username is required</p>
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+          </div>
+
+          {/* Password */}
+          <div className="text-left relative">
+            <label className="block text-sm text-[#1E1B4B] font-medium mb-1">Password</label>
+            <input
+              type={showpassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              className="w-full p-3 bg-white/80 rounded-md border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 pr-12"
+              {...register('password', {
+                required: 'Password is required',
+                pattern: {
+                  value: /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/,
+                  message:
+                    'Password must have 8+ characters, 1 uppercase, 1 number, 1 special character',
+                },
+              })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showpassword)}
+              className="absolute top-9 right-3 text-[#1E1B4B]"
+            >
+              {showpassword ? <Eye size={20} /> : <EyeClosed size={20} />}
+            </button>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
             )}
           </div>
 
-          {/* Phone Number Field */}
-          <div className="text-left">
-            <label className="block text-sm text-[#1E1B4B] font-medium mb-1">
-              Phone Number
-            </label>
-            <Controller
-              name="phonenumber"
-              control={control}
-              defaultValue=""
-              rules={{ required: true }}
-              render={({ field }) => (
-                <PhoneInput
-                  {...field}
-                  country="in"
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  onFocus={() => setPhoneFocused(true)}
-                  onBlur={() => setPhoneFocused(false)}
-                  
-                  inputStyle={{
-                    width: '100%',
-                    height: '42px',
-                    paddingLeft: '58px',
-                    paddingRight: '12px',
-                    borderRadius: '6px',
-                    border: phoneFocused ? '2px solid #A78BFA' : '1px solid #E9D5FF',
-                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                    fontFamily: 'sans-serif',
-                    fontSize: '1rem',
-                    boxShadow: phoneFocused ? '0 0 0 1px #A78BFA' : 'none',
-                  }}
-                  buttonStyle={{
-                    width: '50px',
-                    border: 'none',
-                    background: 'transparent',
-                  }}
-                  containerStyle={{
-                    width: '100%',
-                  }}
-                  dropdownStyle={{
-                    borderRadius: '6px',
-                    marginTop: '5px',
-                    width: '360px',
-                  }}
-                  enableSearch
-                  inputProps={{
-                    name: 'phone',
-                    required: true,
-                  }}
-                />
-              )}
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">Phone number is required</p>
-            )}
-          </div>
-
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="pt-4">
             <button
               type="submit"
@@ -141,36 +163,6 @@ function Entry() {
               Register
             </button>
           </div>
-
-          {/* OTP Box (Only After Submit) */}
-          {showotpbox && (
-            <div className="text-center mt-4">
-              <input
-                {...register('otp', { required: true })}
-                className="bg-white/80 text-[#1E1B4B] font-medium py-2 px-4 rounded-md border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Enter your OTP"
-                type="number"
-              />
-              <button onClick={()=>{
-                  reset({
-                    username:'',
-                    phonenumber:''
-                },
-              {
-        keepErrors: true,       // Keeps field error states
-        keepDirty: false,       // Reset dirty fields
-        keepTouched: false,     // Reset touched states
-        keepValues: false       // Clears specific field values
-      })
-
-              }
-              
-              } className="ml-3 bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-300">
-                Check OTP
-              </button>
-              <p className="text-green-500 text-sm mt-2">Registration successful!</p>
-            </div>
-          )}
         </form>
       </div>
     </div>
