@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import 'react-phone-input-2/lib/style.css';
 import { Eye, EyeClosed } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { createUserProfile } from '../conf';
+import { isUsernameTaken } from '../DataBase/getdata';
+import { easeIn, motion } from 'framer-motion';
 
 function Entry() {
   const [loader, setLoader] = useState(false);
@@ -13,7 +14,7 @@ function Entry() {
   const [modal, setmodal] = useState(false);
   const [uid, setUid] = useState(null);
   const [email, setEmail] = useState(null);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
   const navigate = useNavigate();
 
   const {
@@ -33,10 +34,10 @@ function Entry() {
         setUid(user.uid);
         setEmail(data.email);
         setmodal(true);
-        alert("✔ User registered successfully!");
+        alert('✔ User registered successfully!');
       }
     } catch (error) {
-      alert("❌ Error occurred while creating account: " + error.message);
+      alert('❌ Error occurred while creating account: ' + error.message);
     } finally {
       setLoader(false);
     }
@@ -44,26 +45,36 @@ function Entry() {
 
   const registeruser = async () => {
     if (!uid || !username || !email) {
-      alert("❌ Missing info to save profile.");
+      alert('❌ Missing info to save profile.');
+      return;
+    }
+
+    const taken = await isUsernameTaken(username.trim());
+    if (taken) {
+      alert('❌ Username already exists. Please choose a different one.');
       return;
     }
 
     setModalLoader(true);
-    const saved = await createUserProfile(uid, email, username);
+    const saved = await createUserProfile(uid, email, username.trim());
     setModalLoader(false);
 
     if (saved) {
-      alert("✅ Profile saved successfully!");
-      navigate("/login");
+      alert('✅ Profile saved successfully!');
+      navigate('/login');
     } else {
-      alert("❌ Failed to save profile.");
+      alert('❌ Failed to save profile.');
     }
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-[#F5F3FF] via-purple-100 to-purple-300 font-sans flex justify-center items-center px-4">
-
-      {/* Main loader */}
+    <motion.div
+      className="min-h-screen relative bg-gradient-to-br from-[#F5F3FF] via-purple-100 to-purple-300 font-sans flex justify-center items-center px-4"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeIn' }}
+    >
+      {/* Loader */}
       {loader && (
         <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center rounded-xl shadow-lg">
           <div className="relative w-16 h-16">
@@ -77,12 +88,20 @@ function Entry() {
 
       {/* Username Modal */}
       {modal && (
-        <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white/80 rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <motion.div
+          className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="bg-white/80 rounded-2xl shadow-xl p-6 w-full max-w-sm"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <h2 className="text-[#1E1B4B] text-xl font-bold mb-4 text-center">
               Enter Your Social-Eyes Username
             </h2>
-
             <form className="flex flex-col space-y-4">
               <input
                 type="text"
@@ -91,7 +110,6 @@ function Entry() {
                 className="w-full p-3 bg-white/90 rounded-md border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 placeholder="username"
               />
-
               <button
                 type="button"
                 className="w-full py-3 bg-[#1E1B4B] text-white rounded-full hover:bg-[#2C2A6B] transition-all duration-300 font-semibold"
@@ -101,12 +119,17 @@ function Entry() {
                 {modalLoader ? 'Saving...' : 'Done'}
               </button>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Main Form */}
-      <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center relative z-10">
+      <motion.div
+        className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center relative z-10"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
         <img src="/AppLogo.png" alt="App Logo" className="mx-auto w-[120px]" />
         <p className="text-[#1E1B4B] text-lg mt-4">
           It's Superfun & Supereasy using <strong>Social-Eyes</strong>
@@ -163,9 +186,21 @@ function Entry() {
               Register
             </button>
           </div>
+          <div>
+            <p>
+              Already Have an account ?
+              <a
+                className="underline text-blue-500 hover:cursor-default"
+                onClick={() => navigate('/login')}
+              >
+                {' '}
+                Login Here
+              </a>
+            </p>
+          </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

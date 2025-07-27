@@ -12,10 +12,12 @@ export const createUserProfile = async (uid, email, username) => {
       createdAt: new Date(),
     });
 
-    console.log('✅ Profile created successfully for UID:', uid);
+    
     return true;
   } catch (error) {
     console.error('❌ Firestore Error:', error.message);
     return false;
   }
 };
+
+
