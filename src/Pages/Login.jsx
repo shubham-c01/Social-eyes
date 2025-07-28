@@ -25,6 +25,8 @@ const onlogin = async (data) =>{
         setLoader(true)
 
         const email=await getemailbyusername(username.trim())
+        //console.log(u);
+        
         const UserEmail=email.email
         
         if (email) {

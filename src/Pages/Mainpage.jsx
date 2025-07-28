@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { searchUsers } from '../DataBase/SearchUsers';
 import { Link } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
+import { getAuth } from 'firebase/auth';
 
 function Mainpage() {
   const [username, setusername] = useState('');
   const [result, setresult] = useState([]);
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
   const searchdb = async (e) => {
     const value = e.target.value;
@@ -18,8 +21,13 @@ function Mainpage() {
 
     try {
       const userdata = await searchUsers(value.trim());
-      console.log('user===', userdata);
-      setresult(userdata);
+
+      // ✅ Exclude the current user from search results
+      const filteredUsers = userdata.filter(
+        (user) => user.uid !== currentUser?.uid
+      );
+
+      setresult(filteredUsers);
     } catch (error) {
       console.log('error finding user', error);
       setresult([]);
@@ -40,19 +48,13 @@ function Mainpage() {
         <div className="mt-6 space-y-4">
           {result.length > 0 ? (
             result.map((user) => (
-              
-              
               <Link
-              
                 key={user.id}
                 to={`/chat/${user.id}`}
                 className="flex items-center gap-4 bg-white/80 hover:bg-white rounded-xl shadow-md px-4 py-3 transition-all duration-300 border border-purple-200"
               >
-                
-                
                 <FaUserCircle className="text-purple-600 text-3xl" />
                 <span className="text-[#1E1B4B] font-medium">{user.username}</span>
-                
               </Link>
             ))
           ) : (
