@@ -6,6 +6,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { createUserProfile } from '../conf';
 import { isUsernameTaken } from '../DataBase/getdata';
 import { easeIn, motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 function Entry() {
   const [loader, setLoader] = useState(false);
@@ -34,10 +35,10 @@ function Entry() {
         setUid(user.uid);
         setEmail(data.email);
         setmodal(true);
-        alert('✔ User registered successfully!');
+        toast.success('✔ User registered successfully!');
       }
     } catch (error) {
-      alert('❌ Error occurred while creating account: ' + error.message);
+      toast.error('❌ Error occurred while creating account: ' + error.message);
     } finally {
       setLoader(false);
     }
@@ -45,13 +46,13 @@ function Entry() {
 
   const registeruser = async () => {
     if (!uid || !username || !email) {
-      alert('❌ Missing info to save profile.');
+      toast.error('❌ Missing info to save profile.');
       return;
     }
 
     const taken = await isUsernameTaken(username.trim());
     if (taken) {
-      alert('❌ Username already exists. Please choose a different one.');
+      toast.error('❌ Username already exists. Please choose a different one.');
       return;
     }
 
@@ -60,10 +61,10 @@ function Entry() {
     setModalLoader(false);
 
     if (saved) {
-      alert('✅ Profile saved successfully!');
+      toast.success('✅ Profile saved successfully!');
       navigate('/login');
     } else {
-      alert('❌ Failed to save profile.');
+      toast.error('❌ Failed to save profile.');
     }
   };
 
@@ -74,7 +75,6 @@ function Entry() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeIn' }}
     >
-      {/* Loader */}
       {loader && (
         <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center rounded-xl shadow-lg">
           <div className="relative w-16 h-16">
@@ -86,7 +86,6 @@ function Entry() {
         </div>
       )}
 
-      {/* Username Modal */}
       {modal && (
         <motion.div
           className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center"
@@ -123,7 +122,6 @@ function Entry() {
         </motion.div>
       )}
 
-      {/* Main Form */}
       <motion.div
         className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center relative z-10"
         initial={{ opacity: 0, y: 50 }}
@@ -137,7 +135,6 @@ function Entry() {
         <h3 className="text-[#1E1B4B] text-2xl font-bold mt-6">Register Yourself</h3>
 
         <form className="flex flex-col space-y-5 mt-6" onSubmit={handleSubmit(onSubmit)}>
-          {/* Email */}
           <div className="text-left">
             <label className="block text-sm text-[#1E1B4B] font-medium mb-1">Email</label>
             <input
@@ -149,7 +146,6 @@ function Entry() {
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
           </div>
 
-          {/* Password */}
           <div className="text-left relative">
             <label className="block text-sm text-[#1E1B4B] font-medium mb-1">Password</label>
             <input
@@ -177,7 +173,6 @@ function Entry() {
             )}
           </div>
 
-          {/* Submit */}
           <div className="pt-4">
             <button
               type="submit"

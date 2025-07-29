@@ -5,11 +5,11 @@ import { Eye, EyeClosed } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { loginuser } from '../DataBase/Loginuser';
 import { getemailbyusername } from '../Authentication/getEmailbyUsername';
+import toast from 'react-hot-toast';
+
 function Login() {
   const [loader, setLoader] = useState(false);
   const [showpassword, setShowPassword] = useState(false);
-  const [modal, setmodal] = useState(false);
- 
   const navigate = useNavigate();
 
   const {
@@ -18,38 +18,34 @@ function Login() {
     formState: { errors },
   } = useForm();
 
-const onlogin = async (data) =>{
-     const {username,password}=data
-    
-    try {
-        setLoader(true)
+ const onlogin = async (data) => {
+  const { username, password } = data;
 
-        const email=await getemailbyusername(username.trim())
-        //console.log(u);
-        
-        const UserEmail=email.email
-        
-        if (email) {
-        const usercred=  await loginuser(UserEmail,password)
-         console.log("logged in success",usercred);
-         setLoader(false)
-         navigate('/mainpage')
-         
+  try {
+    setLoader(true);
+    const email = await getemailbyusername(username.trim());
 
-            
-        }
-       
-        
-    } catch (error) {
-        console.log("Error loging in user",error);
-        
-        
+    if (email && email.email) {
+      const usercred = await loginuser(email.email, password);
+
+      if (usercred) {
+        toast.success('✅ Logged in successfully!');
+
+        // ⏳ Wait 1.5 seconds before navigating so toast shows
+        setTimeout(() => {
+          navigate('/mainpage');
+        }, 1500);
+      }
+    } else {
+      toast.error('❌ Username not found.');
     }
-}
+  } catch (error) {
+    toast.error('❌ Failed to log in. Please check credentials.');
+  } finally {
+    setLoader(false);
+  }
+};
 
-
-
- 
 
   return (
     <motion.div
@@ -69,7 +65,6 @@ const onlogin = async (data) =>{
         </div>
       )}
 
-
       {/* Main Form */}
       <motion.div
         className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-10 w-full max-w-xl text-center relative z-10"
@@ -81,19 +76,21 @@ const onlogin = async (data) =>{
         <p className="text-[#1E1B4B] text-lg mt-4">
           It's Superfun & Supereasy using <strong>Social-Eyes</strong>
         </p>
-        <h3 className="text-[#1E1B4B] text-2xl font-bold mt-6">Login </h3>
+        <h3 className="text-[#1E1B4B] text-2xl font-bold mt-6">Login</h3>
 
         <form className="flex flex-col space-y-5 mt-6" onSubmit={handleSubmit(onlogin)}>
-          {/* Email */}
+          {/* Username */}
           <div className="text-left">
             <label className="block text-sm text-[#1E1B4B] font-medium mb-1">Username</label>
             <input
               type="text"
               placeholder="Enter your Username"
               className="w-full p-3 bg-white/80 rounded-md border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              {...register('username', { required: 'username is required' })}
+              {...register('username', { required: 'Username is required' })}
             />
-            {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>}
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -133,7 +130,6 @@ const onlogin = async (data) =>{
               Login
             </button>
           </div>
-          
         </form>
       </motion.div>
     </motion.div>
